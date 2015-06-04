@@ -1,1 +1,2 @@
 # gjs
+Growing clojure systems
