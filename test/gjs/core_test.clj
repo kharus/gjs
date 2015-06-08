@@ -1,23 +1,25 @@
 (ns gjs.core-test
   (:require [clojure.test :refer :all]
-            [gjs.core :refer :all]))
+            [gjs.core :refer :all]
+            [gjs.application-runner :refer :all]
+            [gjs.fake-auction-server :refer :all]))
 
-(def auction  (FakeAuctionServer. "item-54321"))
-(def application (ApplicationRunner.))
+(def auction  (new-fake-auction-server "item-54321"))
+;(def application (ApplicationRunner.))
 
 (defn stop-auction [f]
   (f)
-  (stop. auction))
+  (stop-fake-auction-server auction))
 
 (defn stop-application [f]
   (f)
-  (stop. application))
+  (stop-application-runner))
 
 (use-fixtures :each stop-auction stop-application)
 
 (deftest sniper-joins-auction-until-auction-closes
-  (startSellingItem. auction)
-  (startBiddingIn. application auction)
-  (hasReceivedJoinRequestFromSniper. auction)
-  (announceClosed. auction)
-  (showsSniperHasLostAuction. application))
+  (start-selling-item auction)
+  (start-bidding-in auction)
+  (has-received-join-request-from-sniper)
+  (announce-closed auction)
+  (shows-sniper-has-lost-auction))
