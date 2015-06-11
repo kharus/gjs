@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [com.googlecode.windowlicker/windowlicker-swing "r268"]
                  [junit/junit "4.12"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [org.igniterealtime.smack/smack-tcp "4.1.1"]
                  [org.igniterealtime.smack/smack-java7 "4.1.1"]
                  [org.igniterealtime.smack/smack-sasl-provided "4.1.1"]

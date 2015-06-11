@@ -1,5 +1,6 @@
 (ns gjs.fake-auction-server
-  (:require [gjs.core :refer :all])
+  (:require [gjs.core :refer :all]
+            [clojure.core.async :as async :refer [chan >!! <!! alts!! timeout]])
   (:import
     (org.jivesoftware.smack.tcp XMPPTCPConnection XMPPTCPConnectionConfiguration)
     (org.jivesoftware.smack.chat ChatManagerListener ChatManager ChatMessageListener)
@@ -11,12 +12,12 @@
 
 (def item-id-as-login "auction-%s")
 (def auction-password "auction")
-(def messages (ArrayBlockingQueue. 1))
+(def messages-channel (chan 1))
 (def message-listener
   (reify
     ChatMessageListener
     (processMessage [this chat message]
-      (.add messages message))))
+      (>!! messages-channel message))))
 
 (defn new-fake-auction-server [item-id]
   (let [config (-> (XMPPTCPConnectionConfiguration/builder)
@@ -42,7 +43,7 @@
 
 (defn has-received-join-request-from-sniper []
   (Assert/assertThat "Message"
-                     (.poll messages 10 TimeUnit/SECONDS)
+                     (alts!! [messages-channel (timeout 5000)])
                      (Matchers/is (Matchers/notNullValue))))
 
 (defn announce-closed [{:keys [item-id connection current-chat]}]
