@@ -62,19 +62,28 @@
 (defn auction-id [item-id connection]
   (format auction-id-format item-id (.getServiceName connection)))
 
+(defn new-chat-message-listener [callback]
+  (reify
+    ChatMessageListener
+    (processMessage [this chat message]
+      (callback this chat message))))
+
+(def update-label-to-lost
+  (new-chat-message-listener
+    (fn [_ _ _]
+      (SwingUtilities/invokeLater #(show-status status-lost)))))
+
+(defn create-auction-chat [connection auction-id listner]
+  (-> connection
+      ChatManager/getInstanceFor
+      (.createChat auction-id listner)))
+
 (defn -main
   [& args]
   (start-user-interface)
   (let [connection (connect-to (nth args arg-hostname)
                                (nth args arg-username)
                                (nth args arg-password))
-        chat-manager (ChatManager/getInstanceFor connection)
-        chat-message-listner (reify
-                               ChatMessageListener
-                               (processMessage [this chat message]
-                                 (SwingUtilities/invokeLater
-                                   (fn [] (show-status status-lost)))))]
-    (doto (.createChat chat-manager
-                       (auction-id (nth args arg-item-id) connection)
-                       chat-message-listner)
-      (.sendMessage (Message.)))))
+        auction-id (auction-id (nth args arg-item-id) connection)
+        chat (create-auction-chat connection auction-id update-label-to-lost)]
+      (.sendMessage chat (Message.))))
