@@ -32,15 +32,15 @@
     (.setName sniper-status-name)
     (.setBorder (LineBorder. Color/BLACK))))
 
-(def sniper-status (create-label initial-text))
+(def sniper-status-label (create-label initial-text))
 
 (defn show-status [status]
-  (.setText sniper-status status))
+  (.setText sniper-status-label status))
 
 (defn create-main-window []
   (doto (JFrame. "Auction Sniper")
     (.setName main-window-name)
-    (.add sniper-status)
+    (.add sniper-status-label)
     (.pack)
     (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
     (.setVisible true)))
