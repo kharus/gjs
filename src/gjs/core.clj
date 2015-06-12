@@ -1,5 +1,7 @@
 (ns gjs.core
   (:gen-class)
+  (:require [clojure.core.async :refer [chan >!! <!! alts!! timeout]]
+            [gjs.smack :refer :all])
   (:import (javax.swing JFrame SwingUtilities JLabel)
            (javax.swing.border LineBorder)
            (java.awt Color)
@@ -62,17 +64,6 @@
 (defn auction-id [item-id connection]
   (format auction-id-format item-id (.getServiceName connection)))
 
-(defn new-chat-message-listener [callback]
-  (reify
-    ChatMessageListener
-    (processMessage [this chat message]
-      (callback this chat message))))
-
-(def update-label-to-lost
-  (new-chat-message-listener
-    (fn [_ _ _]
-      (SwingUtilities/invokeLater #(show-status status-lost)))))
-
 (defn create-auction-chat [connection auction-id listner]
   (-> connection
       ChatManager/getInstanceFor
@@ -85,5 +76,9 @@
                                (nth args arg-username)
                                (nth args arg-password))
         auction-id (auction-id (nth args arg-item-id) connection)
-        chat (create-auction-chat connection auction-id update-label-to-lost)]
-      (.sendMessage chat (Message.))))
+        auction-channel (chan)
+        austion-listner (new-message-listener auction-channel)
+        chat (create-auction-chat connection auction-id austion-listner)]
+      (.sendMessage chat (Message.))
+      (future (let [[chat message] (<!! auction-channel)]
+                 (SwingUtilities/invokeLater #(show-status status-lost))))))
