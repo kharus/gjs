@@ -49,7 +49,7 @@
 
 (defn start-user-interface []
   (SwingUtilities/invokeAndWait
-    (fn [] (reset! main-window (create-main-window)))))
+    #(reset! main-window (create-main-window))))
 
 (defn connect-to [hostname username password]
   (let [config (-> (XMPPTCPConnectionConfiguration/builder)

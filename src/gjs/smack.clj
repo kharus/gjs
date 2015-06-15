@@ -1,5 +1,5 @@
 (ns gjs.smack
-  (:require [clojure.core.async :refer [chan >!! <!! alts!! timeout]])
+  (:require [clojure.core.async :refer [put!]])
   (:import
     (org.jivesoftware.smack.chat ChatManagerListener ChatManager ChatMessageListener)))
 
@@ -7,10 +7,10 @@
   (reify
     ChatMessageListener
     (processMessage [this chat message]
-      (>!! channel [chat message]))))
+      (put! channel [chat message]))))
 
 (defn new-chat-listener [channel]
   (reify
     ChatManagerListener
     (chatCreated [this chat created-locally]
-      (>!! channel [chat created-locally]))))
+      (put! channel [chat created-locally]))))

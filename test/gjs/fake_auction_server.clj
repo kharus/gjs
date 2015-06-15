@@ -1,18 +1,18 @@
 (ns gjs.fake-auction-server
   (:require [gjs.core :refer :all]
             [gjs.smack :refer :all]
-            [clojure.core.async :refer [chan >!! <!! alts!! timeout]])
+            [clojure.core.async :refer [chan >!! <!! alts!! timeout go <!]])
   (:import
     (org.jivesoftware.smack.tcp XMPPTCPConnection XMPPTCPConnectionConfiguration)
-    (org.jivesoftware.smack.chat ChatManagerListener ChatManager ChatMessageListener)
-    (org.jivesoftware.smack ConnectionConfiguration$SecurityMode MessageListener)
+    (org.jivesoftware.smack.chat ChatManager)
+    (org.jivesoftware.smack ConnectionConfiguration$SecurityMode)
     (org.junit Assert)
     (org.jivesoftware.smack.packet Message)
     (org.hamcrest Matchers)))
 
 (def item-id-as-login "auction-%s")
 (def auction-password "auction")
-(def messages-channel (chan 1))
+(def messages-channel (chan))
 
 (defn new-fake-auction-server [item-id]
   (let [config (-> (XMPPTCPConnectionConfiguration/builder)
@@ -29,10 +29,10 @@
   (.login connection (format item-id-as-login item-id)
           auction-password, auction-resource)
   (let [chat-manager (ChatManager/getInstanceFor connection)
-        chat-channel (chan 1)
+        chat-channel (chan)
         chat-listner (new-chat-listener chat-channel)]
     (.addChatListener chat-manager chat-listner)
-    (future (let [[chat created-locally] (<!! chat-channel)]
+    (go (let [[chat created-locally] (<! chat-channel)]
               (reset! current-chat chat)
               (.addMessageListener chat (new-message-listener messages-channel))))))
 
