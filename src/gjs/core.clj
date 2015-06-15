@@ -1,6 +1,6 @@
 (ns gjs.core
   (:gen-class)
-  (:require [clojure.core.async :refer [chan >!! <!! alts!! timeout]]
+  (:require [clojure.core.async :refer [chan >!! <! alts!! timeout go]]
             [gjs.smack :refer :all])
   (:import (javax.swing JFrame SwingUtilities JLabel)
            (javax.swing.border LineBorder)
@@ -80,5 +80,5 @@
         austion-listner (new-message-listener auction-channel)
         chat (create-auction-chat connection auction-id austion-listner)]
       (.sendMessage chat (Message.))
-      (future (let [[chat message] (<!! auction-channel)]
+      (go (let [[chat message] (<! auction-channel)]
                  (SwingUtilities/invokeLater #(show-status status-lost))))))
