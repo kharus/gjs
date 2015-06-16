@@ -23,3 +23,13 @@
   (has-received-join-request-from-sniper auction)
   (announce-closed auction)
   (shows-sniper-has-lost-auction))
+
+;(deftest sniper-makes-a-higher-bid-but-loses
+;  (start-selling-item auction)
+;  (start-bidding-in auction)
+;  (has-received-join-request-from-sniper auction)
+;  (report-price auction 1000 98 "other bidder")
+;  (has-shown-sniper-is-bidding)
+;  (has-received-bid auction 1098 sniper-id)
+;  (announce-closed auction)
+;  (shows-sniper-has-lost-auction))

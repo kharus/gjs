@@ -14,5 +14,7 @@
 (defn shows-sniper-has-lost-auction []
   (shows-sniper-status @driver status-lost))
 
+(defn has-shown-sniper-is-bidding [])
+
 (defn stop-application-runner []
   (.dispose @driver))

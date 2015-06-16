@@ -5,9 +5,7 @@
   (:import (javax.swing JFrame SwingUtilities JLabel)
            (javax.swing.border LineBorder)
            (java.awt Color)
-           (org.jivesoftware.smack ConnectionConfiguration$SecurityMode)
-           (org.jivesoftware.smack.tcp XMPPTCPConnectionConfiguration XMPPTCPConnection)
-           (org.jivesoftware.smack.chat ChatManager ChatMessageListener)
+           (org.jivesoftware.smack.chat ChatManager Chat)
            (org.jivesoftware.smack.packet Message)))
 
 (def xmpp-hostname "localhost")
@@ -72,7 +70,7 @@
         auction-id (auction-id (nth args arg-item-id) connection)
         auction-channel (chan)
         austion-listner (new-message-listener auction-channel)
-        chat (create-auction-chat connection auction-id austion-listner)]
+        ^Chat chat (create-auction-chat connection auction-id austion-listner)]
     (.sendMessage chat (Message.))
     (go (let [[chat message] (<! auction-channel)]
           (SwingUtilities/invokeLater #(show-status status-lost))))))
