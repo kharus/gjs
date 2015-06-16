@@ -20,6 +20,6 @@
 (deftest sniper-joins-auction-until-auction-closes
   (start-selling-item auction)
   (start-bidding-in auction)
-  (has-received-join-request-from-sniper)
+  (has-received-join-request-from-sniper auction)
   (announce-closed auction)
   (shows-sniper-has-lost-auction))
