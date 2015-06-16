@@ -29,7 +29,7 @@
 (def auction-id-format
   (str item-as-a-login "@%s/" auction-resource))
 
-(defn create-label [initial-text]
+(defn create-label [^String initial-text]
   (doto (JLabel. initial-text)
     (.setName sniper-status-name)
     (.setBorder (LineBorder. Color/BLACK))))
@@ -52,14 +52,8 @@
     #(reset! main-window (create-main-window))))
 
 (defn connect-to [hostname username password]
-  (let [config (-> (XMPPTCPConnectionConfiguration/builder)
-                   (.setServiceName xmpp-servicename)
-                   (.setHost hostname)
-                   (.setSecurityMode ConnectionConfiguration$SecurityMode/disabled)
-                   .build)]
-    (doto (XMPPTCPConnection. config)
-      (.connect)
-      (.login username password auction-resource))))
+  (-> (new-host-connection hostname xmpp-servicename)
+      (do-login username password auction-resource)))
 
 (defn auction-id [item-id connection]
   (format auction-id-format item-id (.getServiceName connection)))
@@ -79,6 +73,6 @@
         auction-channel (chan)
         austion-listner (new-message-listener auction-channel)
         chat (create-auction-chat connection auction-id austion-listner)]
-      (.sendMessage chat (Message.))
-      (go (let [[chat message] (<! auction-channel)]
-                 (SwingUtilities/invokeLater #(show-status status-lost))))))
+    (.sendMessage chat (Message.))
+    (go (let [[chat message] (<! auction-channel)]
+          (SwingUtilities/invokeLater #(show-status status-lost))))))
