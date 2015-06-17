@@ -6,7 +6,9 @@
            (javax.swing.border LineBorder)
            (java.awt Color)
            (org.jivesoftware.smack.chat ChatManager Chat)
-           (org.jivesoftware.smack.packet Message)))
+           (org.jivesoftware.smack.packet Message)
+           (java.awt.event WindowAdapter WindowListener)
+           (org.jivesoftware.smack XMPPConnection)))
 
 (def xmpp-hostname "localhost")
 (def xmpp-servicename "auction")
@@ -17,6 +19,12 @@
 (def auction-resource "Auction")
 (def status-joining "Joining")
 (def status-lost "Lost")
+(def status-bidding "Bidding")
+
+(def join-command-format "SOLVersion: 1.1; Command: JOIN;")
+(def bid-command-format "SOLVersion: 1.1; Command: BID; Price: %d;")
+
+(def ui (atom nil))
 
 (def arg-hostname 0)
 (def arg-username 1)
@@ -32,18 +40,21 @@
     (.setName sniper-status-name)
     (.setBorder (LineBorder. Color/BLACK))))
 
-(def sniper-status-label (create-label initial-text))
+(def sniper-status-label (atom nil))
 
 (defn show-status [status]
-  (.setText sniper-status-label status))
+  (.setText @sniper-status-label status))
 
 (defn create-main-window []
-  (doto (JFrame. "Auction Sniper")
-    (.setName main-window-name)
-    (.add sniper-status-label)
-    (.pack)
-    (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
-    (.setVisible true)))
+  (reset! sniper-status-label (create-label initial-text))
+  (let [new-ui (JFrame. "Auction Sniper")]
+    (doto new-ui
+      (.setName main-window-name)
+      (.add @sniper-status-label)
+      (.pack)
+      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
+      (.setVisible true))
+    (reset! ui new-ui)))
 
 (defn start-user-interface []
   (SwingUtilities/invokeAndWait
@@ -61,6 +72,12 @@
       ChatManager/getInstanceFor
       (.createChat auction-id listner)))
 
+
+(defn close-connection-on-closed [conn]
+  (proxy [WindowAdapter] []
+    (windowClosed [e]
+      (.disconnect conn))))
+
 (defn -main
   [& args]
   (start-user-interface)
@@ -71,6 +88,7 @@
         auction-channel (chan)
         austion-listner (new-message-listener auction-channel)
         ^Chat chat (create-auction-chat connection auction-id austion-listner)]
-    (.sendMessage chat (Message.))
+    (.sendMessage chat join-command-format)
     (go (let [[chat message] (<! auction-channel)]
-          (SwingUtilities/invokeLater #(show-status status-lost))))))
+          (SwingUtilities/invokeLater #(show-status status-lost))))
+    (.addWindowListener @ui (close-connection-on-closed connection))))

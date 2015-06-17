@@ -28,16 +28,21 @@
         (reset! current-chat chat)
         (pipe messages-channel channel)))))
 
-(defn recives-a-message [{channel :channel} message-matcher]
+(defn recives-a-message [{channel :channel current-chat :current-chat} sniper-id message-matcher]
   (let [[[_ message] _] (alts!! [channel (timeout 5000)])]
     (Assert/assertThat "Message" message (Matchers/is (Matchers/notNullValue)))
-    (Assert/assertThat (.getBody message) message-matcher)))
+    (Assert/assertThat (.getBody message) message-matcher))
+  (let [participant-id (.getParticipant @current-chat)
+        pid (first (clojure.string/split participant-id #"@"))]
+    (Assert/assertThat pid (Matchers/equalTo sniper-id))))
 
-(defn has-received-join-request-from-sniper [auction]
-  (recives-a-message auction (Matchers/is (Matchers/anything))))
+(defn has-received-join-request-from-sniper [auction sniper-id]
+  (recives-a-message auction sniper-id
+                     (Matchers/equalTo join-command-format)))
 
-(defn has-received-bid [{channel :channel ^Chat current-chat :current-chat} bid sniperId]
-  (Assert/assertThat (.getParticipant current-chat) (Matchers/equalTo sniperId)))
+(defn has-received-bid [auction bid sniper-id]
+  (recives-a-message auction sniper-id
+                     (Matchers/equalTo (format bid-command-format bid))))
 
 (defn announce-closed [{current-chat :current-chat}]
   (.sendMessage @current-chat (Message.)))
