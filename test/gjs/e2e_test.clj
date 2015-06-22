@@ -1,4 +1,4 @@
-(ns gjs.core-test
+(ns gjs.e2e-test
   (:require [clojure.test :refer :all]
             [gjs.core :refer :all]
             [gjs.application-runner :refer :all]
@@ -18,14 +18,14 @@
 
 (use-fixtures :each stop-auction stop-application)
 
-(deftest sniper-joins-auction-until-auction-closes
+(deftest ^:e2e sniper-joins-auction-until-auction-closes
   (start-selling-item @auction)
   (start-bidding-in @auction)
   (has-received-join-request-from-sniper @auction sniper-id)
   (announce-closed @auction)
   (shows-sniper-has-lost-auction))
 
-(deftest sniper-makes-a-higher-bid-but-loses
+(deftest ^:e2e sniper-makes-a-higher-bid-but-loses
   (start-selling-item @auction)
   (start-bidding-in @auction)
   (has-received-join-request-from-sniper @auction sniper-id)

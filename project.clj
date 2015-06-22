@@ -12,10 +12,14 @@
                  [org.igniterealtime.smack/smack-sasl-provided "4.1.1"]
                  [org.igniterealtime.smack/smack-im "4.1.1"]]
   :main ^:skip-aot gjs.core
-  :aot [gjs.AuctionSniperDriver]
   :target-path "target/%s"
+  :test-selectors {:default     (complement :integration)
+                   :integration :integration
+                   :unit        :unit
+                   :e2e         :e2e
+                   :all         (fn [_] true)}
   :profiles {:uberjar {:aot :all}
-             :user {:plugins [[cider/cider-nrepl "0.9.0-SNAPSHOT"]
-                              [refactor-nrepl "1.1.0-SNAPSHOT"]]
+             :user {:plugins [[cider/cider-nrepl "0.9.0"]
+                              [refactor-nrepl "1.0.5"]]
                     :dependencies [[alembic "0.3.2"]
                                    [org.clojure/tools.nrepl "0.2.7"]]}})

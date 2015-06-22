@@ -1,14 +1,13 @@
 (ns gjs.core
   (:gen-class)
-  (:require [clojure.core.async :refer [chan >!! <! alts!! timeout go]]
+  (:require [clojure.core.async :refer [chan >!! <! alts!! timeout go put! >!]]
+            [gjs.auction-translator :refer [translate]]
             [gjs.smack :refer :all])
   (:import (javax.swing JFrame SwingUtilities JLabel)
            (javax.swing.border LineBorder)
            (java.awt Color)
            (org.jivesoftware.smack.chat ChatManager Chat)
-           (org.jivesoftware.smack.packet Message)
-           (java.awt.event WindowAdapter WindowListener)
-           (org.jivesoftware.smack XMPPConnection)))
+           (java.awt.event WindowAdapter)))
 
 (def xmpp-hostname "localhost")
 (def xmpp-servicename "auction")
@@ -87,8 +86,10 @@
         auction-id (auction-id (nth args arg-item-id) connection)
         auction-channel (chan)
         austion-listner (new-message-listener auction-channel)
-        ^Chat chat (create-auction-chat connection auction-id austion-listner)]
+        ^Chat chat (create-auction-chat connection auction-id austion-listner)
+        events (chan)]
+    (translate auction-channel events)
     (.sendMessage chat join-command-format)
-    (go (let [[chat message] (<! auction-channel)]
+    (go (let [[_] (<! events)]
           (SwingUtilities/invokeLater #(show-status status-lost))))
     (.addWindowListener @ui (close-connection-on-closed connection))))
