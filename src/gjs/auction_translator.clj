@@ -1,6 +1,5 @@
 (ns gjs.auction-translator
-  (:require [clojure.core.async :refer
-             [chan >!! <! alts!! timeout go put! go-loop >!]]
+  (:require [clojure.core.async :refer [<! go-loop >!]]
             [clojure.string :refer [trim split lower-case]]
             [gjs.smack :refer :all]))
 
@@ -12,11 +11,11 @@
     (into {} event)))
 
 (defn translate [message channel]
-  (go-loop [current (<! message)]
-           (let [event (translate-message current)]
-             (case (:event event)
-               "CLOSE" (>! channel [:auction-closed])
-               "PRICE" (>! channel [:current-price
-                                    (Integer/parseInt (:currentprice event))
-                                    (Integer/parseInt (:increment event))])))
-           (recur (<! message))))
+  (go-loop [[_ current] (<! message)]
+    (let [event (translate-message current)]
+      (case (:event event)
+        "CLOSE" (>! channel [:auction-closed])
+        "PRICE" (>! channel [:current-price
+                             (Integer/parseInt (:currentprice event))
+                             (Integer/parseInt (:increment event))])))
+    (recur (<! message))))

@@ -45,14 +45,13 @@
                      (Matchers/equalTo (format bid-command-format bid))))
 
 (defn announce-closed [{current-chat :current-chat}]
-  (.sendMessage @current-chat (Message.)))
+  (.sendMessage @current-chat "SOLVersion: 1.1; Event: CLOSE;"))
 
 (defn stop-fake-auction-server [{connection :connection}]
   (.disconnect connection))
 
 (defn report-price [{:keys [item-id connection current-chat]}  price increment  bidder]
   (.sendMessage @current-chat
-                (Message.
                   (format "SOLVersion: 1.1; Event: PRICE; CurrentPrice: %d; Increment: %d; Bidder: %s;"
-                                    price, increment, bidder))))
+                                    price, increment, bidder)))
 

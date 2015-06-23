@@ -12,7 +12,7 @@
         messages (chan)
         events (chan)]
     (translate messages events)
-    (put! messages message)
+    (put! messages [:chan message])
     (is (= [:auction-closed] (<!! events)))))
 
 (deftest ^:unit notifies-bid-details-when-current-price-message-received
@@ -21,5 +21,5 @@
         messages (chan)
         events (chan)]
     (translate messages events)
-    (put! messages message)
+    (put! messages [:chan message])
     (is (= [:current-price 192 7] (<!! events)))))
