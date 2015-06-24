@@ -1,5 +1,6 @@
 (ns gjs.auction-sniper-driver
-  (:require [gjs.core :refer :all])
+  (:require [gjs.core :refer :all]
+            [gjs.ui-window :refer :all])
   (:import (com.objogate.wl.swing.driver JFrameDriver ComponentDriver JLabelDriver)
            (com.objogate.wl.swing.gesture GesturePerformer)
            (com.objogate.wl.swing AWTEventQueueProber)

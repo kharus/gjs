@@ -2,19 +2,16 @@
   (:gen-class)
   (:require [clojure.core.async :refer [chan >!! <! alts!! timeout go put! >!]]
             [gjs.auction-translator :refer [translate]]
-            [gjs.smack :refer :all])
-  (:import (javax.swing JFrame SwingUtilities JLabel)
-           (javax.swing.border LineBorder)
-           (java.awt Color)
+            [gjs.smack :refer :all]
+            [gjs.ui-window :refer :all])
+  (:import (javax.swing SwingUtilities)
            (org.jivesoftware.smack.chat ChatManager Chat)
            (java.awt.event WindowAdapter)))
 
 (def xmpp-hostname "localhost")
 (def xmpp-servicename "auction")
-(def main-window-name "Auction Sniper Main")
-(def main-window (atom nil))
-(def sniper-status-name "sniper status")
-(def initial-text "Joining")
+
+
 (def auction-resource "Auction")
 (def status-joining "Joining")
 (def status-lost "Lost")
@@ -23,41 +20,19 @@
 (def join-command-format "SOLVersion: 1.1; Command: JOIN;")
 (def bid-command-format "SOLVersion: 1.1; Command: BID; Price: %d;")
 
-(def ui (atom nil))
-
 (def arg-hostname 0)
 (def arg-username 1)
 (def arg-password 2)
 (def arg-item-id 3)
 
 (def item-as-a-login "auction-%s")
+
 (def auction-id-format
   (str item-as-a-login "@%s/" auction-resource))
 
-(defn create-label [^String initial-text]
-  (doto (JLabel. initial-text)
-    (.setName sniper-status-name)
-    (.setBorder (LineBorder. Color/BLACK))))
-
-(def sniper-status-label (atom nil))
-
-(defn show-status [status]
-  (.setText @sniper-status-label status))
-
-(defn create-main-window []
-  (reset! sniper-status-label (create-label initial-text))
-  (let [new-ui (JFrame. "Auction Sniper")]
-    (doto new-ui
-      (.setName main-window-name)
-      (.add @sniper-status-label)
-      (.pack)
-      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
-      (.setVisible true))
-    (reset! ui new-ui)))
-
-(defn start-user-interface []
+(defn start-user-interface [ui]
   (SwingUtilities/invokeAndWait
-    #(reset! main-window (create-main-window))))
+    #(start-ui ui)))
 
 (defn connect-to [hostname username password]
   (-> (new-host-connection hostname xmpp-servicename)
@@ -71,7 +46,6 @@
       ChatManager/getInstanceFor
       (.createChat auction-id listner)))
 
-
 (defn close-connection-on-closed [conn]
   (proxy [WindowAdapter] []
     (windowClosed [e]
@@ -79,8 +53,9 @@
 
 (defn -main
   [& args]
-  (start-user-interface)
-  (let [connection (connect-to (nth args arg-hostname)
+
+  (let [ui (create-main-window)
+        connection (connect-to (nth args arg-hostname)
                                (nth args arg-username)
                                (nth args arg-password))
         auction-id (auction-id (nth args arg-item-id) connection)
@@ -88,8 +63,9 @@
         austion-listner (new-message-listener auction-channel)
         ^Chat chat (create-auction-chat connection auction-id austion-listner)
         events (chan)]
+    (start-user-interface ui)
     (translate auction-channel events)
     (.sendMessage chat join-command-format)
     (go (let [[_] (<! events)]
-          (SwingUtilities/invokeLater #(show-status status-lost))))
-    (.addWindowListener @ui (close-connection-on-closed connection))))
+          (SwingUtilities/invokeLater #(show-status ui status-lost))))
+    (.addWindowListener (ui 0) (close-connection-on-closed connection))))
